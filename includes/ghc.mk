@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------
 #
-# (c) 2009 The University of Glasgow
+# (c) 2009-2012 The University of Glasgow
 #
 # This file is part of the GHC build system.
 #
@@ -60,7 +60,7 @@ ifneq "$(BINDIST)" "YES"
 ifeq "$(PORTING_HOST)" "YES"
 
 $(includes_H_CONFIG) :
-	@echo "*** Cross-compiling: please copy $(includes_H_CONFIG) from the target system"
+	@echo "*** Cross-porting: please copy $(includes_H_CONFIG) from the target system"
 	@exit 1
 
 else
@@ -134,10 +134,29 @@ includes_DERIVEDCONSTANTS = includes/dist-derivedconstants/header/DerivedConstan
 ifeq "$(PORTING_HOST)" "YES"
 
 DerivedConstants.h :
-	@echo "*** Cross-compiling: please copy DerivedConstants.h from the target system"
+	@echo "*** Cross-porting: please copy DerivedConstants.h from the target system"
 	@exit 1
 
 else
+
+# $(eval $(call cross-compiling,\
+# fun-targ:joebutt\
+# ,CROSS-COMPILING=1,\
+# ,fun-targ: joebutt2))
+ifneq "$(TARGETPLATFORM)xxx" "$(HOSTPLATFORM)"
+includes/mkDerivedConstants.cross.o: includes/mkDerivedConstants.cross.awk
+includes/mkDerivedConstants.cross.o: includes/stg/Regs.h
+	awk -f mkDerivedConstants.cross.awk $< | $(CC_STAGE1) -x c -c - -o $@
+includes/SizeMacros.h: includes/mkSizeMacros.cross.awk
+includes/SizeMacros.h: includes/mkDerivedConstants.cross.o
+	$(NM) $< | $(SORT) | awk -f includes/mkSizeMacros.cross.awk
+# XXX NM_STAGE1
+else
+includes/SizeMacros.h:
+	@ echo "#define OFFSET(s_type, field) ((size_t)&(((s_type*)0)->field))" > $@
+	@ echo "#define FIELD_SIZE(s_type, field) ((unsigned long)sizeof(((s_type*)0)->field))" >> $@
+	@ echo "#define TYPE_SIZE(type) (sizeof(type))" >> $@
+endif
 
 includes_dist-derivedconstants_C_SRCS = mkDerivedConstants.c
 includes_dist-derivedconstants_PROG   = mkDerivedConstants$(exeext)
@@ -162,7 +181,7 @@ includes_GHCCONSTANTS = includes/dist-ghcconstants/header/GHCConstants.h
 ifeq "$(PORTING_HOST)" "YES"
 
 $(includes_GHCCONSTANTS) :
-	@echo "*** Cross-compiling: please copy DerivedConstants.h from the target system"
+	@echo "*** Cross-porting: please copy DerivedConstants.h from the target system"
 	@exit 1
 
 else
