@@ -38,7 +38,6 @@ BEGIN {
 
 /^typedef struct {[ \t]*$/ {
   interesting = 1
-  #print "struct " struct_name " {"
   next
 }
 
@@ -46,7 +45,6 @@ BEGIN {
 ##
 interesting && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ {
   sub(/;$/, "", $2)
-  ##print "######## STRUCT complete: " $2
   
   print "char SIZEOF" offset_struct_name "[sizeof(" $2 ")];"
 
@@ -76,9 +74,9 @@ interesting && /^[ \t]*struct[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*\*[ \t]*[
   print ""
   offset_struct_name = new_offset_struct_name
 
-
-  print ""
   print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  print ""
+  print ""
   next
 }
 
@@ -101,9 +99,9 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA
   print ""
   offset_struct_name = new_offset_struct_name
 
-
-  print ""
   print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  print ""
+  print ""
   next
 }
 
