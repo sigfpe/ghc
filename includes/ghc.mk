@@ -141,13 +141,13 @@ else
 
 ifneq "$(TARGETPLATFORM)dd" "$(HOSTPLATFORM)"
 includes/Capability.cross.h: rts/Capability.h
-	$(CPP) $(rts_CC_OPTS) $< > $@
+	$(CPP) $(rts_CC_OPTS) -DTHREADED_RTS $< > $@
 includes/mkDerivedConstants.cross.c: includes/stg/Regs.h includes/Capability.cross.h
 	awk -f includes/mkDerivedConstants.cross.awk $^ > $@
 includes/SizeMacros.h: includes/dist-derivedconstants/build/mkDerivedConstants.cross.o
 	$(NM) $< | $(SORT) | awk -f includes/mkSizeMacros.cross.awk > $@
 includes_dist-derivedconstants_C_SRCS = includes/mkDerivedConstants.cross.c
-##includes_dist-derivedconstants_CC_OPTS = -Irts/stg
+includes_dist-derivedconstants_CC_OPTS = -fcommon
 includes/dist-derivedconstants/build/mkDerivedConstants.cross.o : $(includes_H_CONFIG) $(includes_H_PLATFORM)
 # XXX NM_STAGE1 AWK
 # XXX includes/mkDerivedConstants.cross.o needs to be compiled by CC_STAGE1

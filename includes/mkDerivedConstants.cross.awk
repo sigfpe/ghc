@@ -24,6 +24,10 @@ BEGIN {
   print ""
 }
 
+/#if IN_STG_CODE/ {
+  nextfile
+}
+
 !interesting {
   struct_name = "__" seed "_"
   offset_struct_name = ""
@@ -45,12 +49,13 @@ BEGIN {
   next
 }
 
-/^#[0-9]/ {
+/^# [0-9]/ {
   print
   next
 }
 
 /^typedef struct[ \t][ \t]*[_0-9a-zA-Z]*[ \t]*{[ \t]*$/ {
+  if (interesting) error "previous struct not closed?"
   interesting = 1
   print ""
   print "/* ### Creating offset structs for " $3 " ### */"
@@ -58,6 +63,7 @@ BEGIN {
 }
 
 /^struct[ \t][ \t]*[_0-9a-zA-Z]*[ \t]*{[ \t]*$/ {
+  if (interesting) error "previous struct not closed?"
   interesting = 1
   known_struct_name = $2
   sub(/_$/, "", known_struct_name);
@@ -84,16 +90,22 @@ interesting && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/{
   interesting = 0
 }
 
-interesting && /^[ \t]*}[ \t]*$/ {
-  sub(/;$/, "", known_struct_name)
-  
+interesting && /^[ \t]*}[; \t]*$/ {
   print "char SIZEOF" offset_struct_name "[sizeof(" known_struct_name ")];"
 
-  print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" known_struct_name ") ? 1 : -1];"
+  # print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" known_struct_name ") ? 1 : -1];"
   print ""
   print ""
   ++seed
   interesting = 0
+}
+
+# collapse whitespace after '*'
+interesting {
+  gsub(/\*[ \t]*/, "*")
+  print "//   " $0
+  # remove volatile
+  sub(/[ \t]volatile[ \t]/, " ")
 }
 
 ## (pointer to struct) member of struct
@@ -127,9 +139,9 @@ interesting && /^[ \t]*struct[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*\*[ \t]*[
 
 ## (simple pointer) member of struct
 ##
-interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*\*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ {
+interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*\*\**[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ {
   sub(/;$/, "", $2)
-  sub(/^\*/, "", $2)
+  sub(/^\**/, "", $2)
 
   new_offset_struct_name = struct_name $2
   print "struct " new_offset_struct_name " {"
