@@ -141,8 +141,10 @@ else
 
 ifneq "$(TARGETPLATFORM)dd" "$(HOSTPLATFORM)"
 includes/Capability.cross.h: rts/Capability.h
-	$(CPP) $(rts_CC_OPTS) -DTHREADED_RTS $< > $@
-includes/mkDerivedConstants.cross.c: includes/stg/Regs.h includes/Capability.cross.h
+	$(CPP) $(rts_CC_OPTS) -DNO_THREADED_RTS $< > $@
+includes/Rts.cross.h: includes/Rts.h
+	$(CPP) $(rts_CC_OPTS) -DNO_THREADED_RTS $< > $@
+includes/mkDerivedConstants.cross.c: includes/Rts.cross.h includes/Capability.cross.h
 	awk -f includes/mkDerivedConstants.cross.awk $^ > $@
 includes/SizeMacros.h: includes/dist-derivedconstants/build/mkDerivedConstants.cross.o
 	$(NM) $< | $(SORT) | awk -f includes/mkSizeMacros.cross.awk > $@

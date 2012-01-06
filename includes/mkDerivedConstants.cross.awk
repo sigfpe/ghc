@@ -24,15 +24,77 @@ BEGIN {
   print ""
 }
 
+## pass through embedded unions
+eat_union && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ {
+  past_members = past_members "\n" $0
+
+  sub(/^[ \t]*}[ \t]*/, "")
+  sub(/[ \t]*;[ \t]*$/, "")
+  new_offset_struct_name = struct_name $0
+
+  print "struct " new_offset_struct_name " {"
+  if (past_members) print past_members
+
+  eat_union = 0
+print "//////// GETTING OUT OF UNION"
+  print "};"
+  print ""
+  offset_struct_name = new_offset_struct_name
+
+  print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  next
+}
+
+eat_union {
+  past_members = past_members "\n" $0
+  next
+}
+
+/# [0-9]* "rts\// {
+  ours = 1
+  next
+}
+
+/# [0-9]* "includes\// {
+  ours = 1
+  next
+}
+
+## filter out non-ghc headers
+/# [0-9]* "/ {
+  ours = 0
+  next
+}
+
+!ours {
+  next
+}
+
+
 /#if IN_STG_CODE/ {
   nextfile
 }
 
 !interesting {
-  struct_name = "__" seed "_"
+  struct_name = "$" seed "$"
   offset_struct_name = ""
   past_members = ""
   known_struct_name = ""
+  eat_union = 0
+}
+
+## exclude some complicated ones
+/typedef struct StgFunInfoExtraRev_ {/ {
+  next
+}
+/typedef struct StgFunInfoExtraFwd_ {/ {
+  next
+}
+/typedef struct StgInfoTable_ {/ {
+  next
+}
+/typedef struct StgClosure_ {/ {
+  next
 }
 
 ## kill comments
@@ -102,10 +164,14 @@ interesting && /^[ \t]*}[; \t]*$/ {
 
 # collapse whitespace after '*'
 interesting {
+  gsub(/\*[ \t]*volatile/, "*")
   gsub(/\*[ \t]*/, "*")
+  sub(/\*/, " *")
   print "//   " $0
   # remove volatile
   sub(/[ \t]volatile[ \t]/, " ")
+  # remove const
+  sub(/[ \t]const[ \t]/, " ")
 }
 
 ## (pointer to struct) member of struct
@@ -188,3 +254,13 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA
   next
 }
 
+## embedded union
+interesting && /^[ \t]*union[ \t]*{[ \t]*$/ {
+  if (past_members) {
+    past_members = past_members "\n" $0
+  } else {
+    past_members = $0
+  }
+  eat_union = 1
+  next
+}
