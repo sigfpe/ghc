@@ -96,6 +96,9 @@ eat_union {
 /typedef struct StgClosure_ {/ {
   next
 }
+/typedef struct StgTSO_ {/ {
+  next
+}
 
 ## kill comments
 /\/\*.*\*\// {
@@ -262,5 +265,33 @@ interesting && /^[ \t]*union[ \t]*{[ \t]*$/ {
     past_members = $0
   }
   eat_union = 1
+  next
+}
+
+## array member
+interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*\[.*\];[ \t]*$/ {
+  sub(/;$/, "", $2)
+
+  full = $2
+  split($2, parts, "[")
+  $2 = parts[1]
+
+  new_offset_struct_name = struct_name $2
+  print "struct " new_offset_struct_name " {"
+  if (past_members) print past_members
+  new_member = "  " $1 " " full ";"
+  print new_member
+  if (past_members) {
+    past_members = past_members "\n" new_member
+  } else {
+    past_members = new_member
+  }
+  print "};"
+  print ""
+  offset_struct_name = new_offset_struct_name
+
+  print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  print ""
+  print ""
   next
 }
