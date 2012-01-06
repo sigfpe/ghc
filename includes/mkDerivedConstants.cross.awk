@@ -22,6 +22,7 @@ BEGIN {
   print "#include \"includes/ghcautoconf.h\""
   print "#include \"includes/stg/Types.h\""
   print "#include \"includes/stg/Regs.h\""
+  print "#include \"rts/Capability.h\""
   print ""
 }
 
@@ -36,14 +37,37 @@ BEGIN {
     gsub(/\/\*.*\*\//, "")
 }
 
-/^typedef struct {[ \t]*$/ {
+/\/\/.*$/ {
+    sub(/\/\/.*$/, "")
+}
+
+## kill empty line
+/^[ \t]*$/ {
+  next
+}
+
+/^#/ {
+  print
+  next
+}
+
+/^typedef struct[ \t][ \t]*[_0-9a-zA-Z]*[ \t]*{[ \t]*$/ {
   interesting = 1
+
+print "############# INTERESTING" $3
+  next
+}
+
+/^struct[ \t][ \t]*[_0-9a-zA-Z]*[ \t]*{[ \t]*$/ {
+  interesting = 1
+
+print "############# INTERESTING" $2
   next
 }
 
 ## end of struct
 ##
-interesting && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ {
+interesting && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ || /^[ \t]*}[ \t]*$/ {
   sub(/;$/, "", $2)
   
   print "char SIZEOF" offset_struct_name "[sizeof(" $2 ")];"

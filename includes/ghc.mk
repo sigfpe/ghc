@@ -140,12 +140,12 @@ DerivedConstants.h :
 else
 
 ifneq "$(TARGETPLATFORM)dd" "$(HOSTPLATFORM)"
-#includes/mkDerivedConstants.cross.o: includes/mkDerivedConstants.cross.awk
-includes/mkDerivedConstants.cross.o: includes/stg/Regs.h
-	awk -f includes/mkDerivedConstants.cross.awk $< | $(CC_STAGE1) -x c -c - -o $@
-#includes/SizeMacros.h: includes/mkSizeMacros.cross.awk
+includes/Capability.cross.h: rts/Capability.h
+	$(CPP) $(rts_CC_OPTS) $< > $@
+includes/mkDerivedConstants.cross.o: includes/stg/Regs.h includes/Capability.cross.h
+	awk -f includes/mkDerivedConstants.cross.awk $^ | $(CC_STAGE1) $(rts_CC_OPTS) -x c -c - -o $@
 includes/SizeMacros.h: includes/mkDerivedConstants.cross.o
-	$(NM) $< | $(SORT) | awk -f includes/mkSizeMacros.cross.awk
+	$(NM) $< | $(SORT) | awk -f includes/mkSizeMacros.cross.awk > $@
 # XXX NM_STAGE1 AWK
 else
 includes/SizeMacros.h:
