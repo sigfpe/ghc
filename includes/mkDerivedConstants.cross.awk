@@ -30,6 +30,7 @@ BEGIN {
   struct_name = "__" seed "_"
   offset_struct_name = ""
   past_members = ""
+  known_struct_name = ""
 }
 
 ## kill comments
@@ -60,15 +61,20 @@ print "############# INTERESTING" $3
 
 /^struct[ \t][ \t]*[_0-9a-zA-Z]*[ \t]*{[ \t]*$/ {
   interesting = 1
-
-print "############# INTERESTING" $2
+  known_struct_name = $2
+  sub(/_$/, "", known_struct_name);
+  print "char associate$" known_struct_name "$" seed ";"
+print "############# INTERESTING" known_struct_name
   next
 }
 
 ## end of struct
 ##
-interesting && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ || /^[ \t]*}[ \t]*$/ {
+interesting && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/{
   sub(/;$/, "", $2)
+
+  print "char associate$" $2 "$" seed ";"
+
   
   print "char SIZEOF" offset_struct_name "[sizeof(" $2 ")];"
 
@@ -79,7 +85,19 @@ interesting && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ || /^[ \t
   interesting = 0
 }
 
-## (pointer) member of struct
+interesting && /^[ \t]*}[ \t]*$/ {
+  sub(/;$/, "", known_struct_name)
+  
+  print "char SIZEOF" offset_struct_name "[sizeof(" known_struct_name ")];"
+
+  print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" known_struct_name ") ? 1 : -1];"
+  print ""
+  print ""
+  ++seed
+  interesting = 0
+}
+
+## (pointer to struct) member of struct
 ##
 interesting && /^[ \t]*struct[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*\*[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ {
   sub(/;$/, "", $4)
@@ -88,6 +106,32 @@ interesting && /^[ \t]*struct[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*\*[ \t]*[
   print "struct " new_offset_struct_name " {"
   if (past_members) print past_members
   new_member = "  struct " $2 " * " $4 ";"
+  print new_member
+  if (past_members) {
+    past_members = past_members "\n" new_member
+  } else {
+    past_members = new_member
+  }
+  print "};"
+  print ""
+  offset_struct_name = new_offset_struct_name
+
+  print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  print ""
+  print ""
+  next
+}
+
+## (simple pointer) member of struct
+##
+interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*\*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ {
+  sub(/;$/, "", $2)
+  sub(/^\*/, "", $2)
+
+  new_offset_struct_name = struct_name $2
+  print "struct " new_offset_struct_name " {"
+  if (past_members) print past_members
+  new_member = "  " $1 " * " $2 ";"
   print new_member
   if (past_members) {
     past_members = past_members "\n" new_member
