@@ -139,23 +139,19 @@ DerivedConstants.h :
 
 else
 
-# $(eval $(call cross-compiling,\
-# fun-targ:joebutt\
-# ,CROSS-COMPILING=1,\
-# ,fun-targ: joebutt2))
-ifneq "$(TARGETPLATFORM)xxx" "$(HOSTPLATFORM)"
-includes/mkDerivedConstants.cross.o: includes/mkDerivedConstants.cross.awk
+ifneq "$(TARGETPLATFORM)dd" "$(HOSTPLATFORM)"
+#includes/mkDerivedConstants.cross.o: includes/mkDerivedConstants.cross.awk
 includes/mkDerivedConstants.cross.o: includes/stg/Regs.h
-	awk -f mkDerivedConstants.cross.awk $< | $(CC_STAGE1) -x c -c - -o $@
-includes/SizeMacros.h: includes/mkSizeMacros.cross.awk
+	awk -f includes/mkDerivedConstants.cross.awk $< | $(CC_STAGE1) -x c -c - -o $@
+#includes/SizeMacros.h: includes/mkSizeMacros.cross.awk
 includes/SizeMacros.h: includes/mkDerivedConstants.cross.o
 	$(NM) $< | $(SORT) | awk -f includes/mkSizeMacros.cross.awk
-# XXX NM_STAGE1
+# XXX NM_STAGE1 AWK
 else
 includes/SizeMacros.h:
-	@ echo "#define OFFSET(s_type, field) ((size_t)&(((s_type*)0)->field))" > $@
-	@ echo "#define FIELD_SIZE(s_type, field) ((unsigned long)sizeof(((s_type*)0)->field))" >> $@
-	@ echo "#define TYPE_SIZE(type) (sizeof(type))" >> $@
+	@echo "#define OFFSET(s_type, field) ((size_t)&(((s_type*)0)->field))" > $@
+	@echo "#define FIELD_SIZE(s_type, field) ((unsigned long)sizeof(((s_type*)0)->field))" >> $@
+	@echo "#define TYPE_SIZE(type) (sizeof(type))" >> $@
 endif
 
 includes_dist-derivedconstants_C_SRCS = mkDerivedConstants.c

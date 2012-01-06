@@ -24,16 +24,13 @@
 #include "Rts.h"
 #include "Stable.h"
 #include "Capability.h"
+#include "SizeMacros.h"
+
+#pragma GCC poison sizeof
 
 #include <stdio.h>
 
 #define str(a,b) #a "_" #b
-
-#define OFFSET(s_type, field) ((size_t)&(((s_type*)0)->field))
-#define FIELD_SIZE(s_type, field) ((unsigned long)sizeof(((s_type*)0)->field))
-#define TYPE_SIZE(type) (sizeof(type))
-
-#pragma GCC poison sizeof
 
 #if defined(GEN_HASKELL)
 #define def_offset(str, offset)                          \
