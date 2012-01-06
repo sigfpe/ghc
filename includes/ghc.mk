@@ -142,11 +142,15 @@ else
 ifneq "$(TARGETPLATFORM)dd" "$(HOSTPLATFORM)"
 includes/Capability.cross.h: rts/Capability.h
 	$(CPP) $(rts_CC_OPTS) $< > $@
-includes/mkDerivedConstants.cross.o: includes/stg/Regs.h includes/Capability.cross.h
-	awk -f includes/mkDerivedConstants.cross.awk $^ | $(CC_STAGE1) $(rts_CC_OPTS) -x c -c - -o $@
-includes/SizeMacros.h: includes/mkDerivedConstants.cross.o
+includes/mkDerivedConstants.cross.c: includes/stg/Regs.h includes/Capability.cross.h
+	awk -f includes/mkDerivedConstants.cross.awk $^ > $@
+includes/SizeMacros.h: includes/dist-derivedconstants/build/mkDerivedConstants.cross.o
 	$(NM) $< | $(SORT) | awk -f includes/mkSizeMacros.cross.awk > $@
+includes_dist-derivedconstants_C_SRCS = includes/mkDerivedConstants.cross.c
+##includes_dist-derivedconstants_CC_OPTS = -Irts/stg
+includes/dist-derivedconstants/build/mkDerivedConstants.cross.o : $(includes_H_CONFIG) $(includes_H_PLATFORM)
 # XXX NM_STAGE1 AWK
+# XXX includes/mkDerivedConstants.cross.o needs to be compiled by CC_STAGE1
 else
 includes/SizeMacros.h:
 	@echo "#define OFFSET(s_type, field) ((size_t)&(((s_type*)0)->field))" > $@
@@ -154,7 +158,7 @@ includes/SizeMacros.h:
 	@echo "#define TYPE_SIZE(type) (sizeof(type))" >> $@
 endif
 
-includes_dist-derivedconstants_C_SRCS = mkDerivedConstants.c
+includes_dist-derivedconstants_C_SRCS += mkDerivedConstants.c
 includes_dist-derivedconstants_PROG   = mkDerivedConstants$(exeext)
 
 $(eval $(call build-prog,includes,dist-derivedconstants,0))
