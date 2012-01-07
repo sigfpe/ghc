@@ -92,9 +92,6 @@ eat_union {
 /typedef struct StgClosure_ {/ {
   next
 }
-/typedef struct StgTSO_ {/ {
-  next
-}
 /typedef struct generation_ {/ {
   next
 }
@@ -144,6 +141,23 @@ eat_union {
 ##
 interesting && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/{
   sub(/;$/, "", $2)
+
+  print "char associate$" $2 "$" seed ";"
+
+  
+  print "char SIZEOF" offset_struct_name "[sizeof(" $2 ")];"
+
+  print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" $2 ") ? 1 : -1];"
+  print ""
+  print ""
+  ++seed
+  interesting = 0
+}
+
+## Ptr-typedef
+interesting && /^[ \t]*}[ \t]*\*[_0-9a-zA-Z][_0-9a-zA-Z]*Ptr[ \t]*;[ \t]*$/{
+  sub(/Ptr;$/, "", $2)
+  sub(/^\*/, "", $2)
 
   print "char associate$" $2 "$" seed ";"
 
