@@ -83,13 +83,7 @@ eat_union {
 }
 
 ## exclude some complicated ones
-/^typedef struct StgFunInfoExtraFwd_ {$/ {
-  next
-}
 /^typedef struct StgInfoTable_ {$/ {
-  next
-}
-/^typedef struct StgClosure_ {$/ {
   next
 }
 /^typedef struct generation_ {$/ {
