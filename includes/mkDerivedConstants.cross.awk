@@ -36,7 +36,6 @@ eat_union && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ {
   if (past_members) print past_members
 
   eat_union = 0
-print "//////// GETTING OUT OF UNION"
   print "};"
   print ""
   offset_struct_name = new_offset_struct_name
@@ -84,9 +83,6 @@ eat_union {
 }
 
 ## exclude some complicated ones
-/typedef struct StgFunInfoExtraRev_ {/ {
-  next
-}
 /typedef struct StgFunInfoExtraFwd_ {/ {
   next
 }
@@ -97,6 +93,12 @@ eat_union {
   next
 }
 /typedef struct StgTSO_ {/ {
+  next
+}
+/typedef struct generation_ {/ {
+  next
+}
+/struct [_A-Z]*_FLAGS {/ {
   next
 }
 
@@ -270,16 +272,45 @@ interesting && /^[ \t]*union[ \t]*{[ \t]*$/ {
 
 ## array member
 interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*\[.*\];[ \t]*$/ {
-  sub(/;$/, "", $2)
+  sub(/;[ \t]*$/, "", $0)
 
-  full = $2
-  split($2, parts, "[")
-  $2 = parts[1]
+  full = $0
+  sub(/^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*/, "", full)
+  split(full, parts, "[")
+  mname = parts[1]
 
-  new_offset_struct_name = struct_name $2
+  new_offset_struct_name = struct_name mname
   print "struct " new_offset_struct_name " {"
   if (past_members) print past_members
   new_member = "  " $1 " " full ";"
+  print new_member
+  if (past_members) {
+    past_members = past_members "\n" new_member
+  } else {
+    past_members = new_member
+  }
+  print "};"
+  print ""
+  offset_struct_name = new_offset_struct_name
+
+  print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  print ""
+  print ""
+  next
+}
+
+
+## padded member of struct
+##   of this form: StgHalfInt slow_apply_offset; StgHalfWord __pad_slow_apply_offset;;
+##
+interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*;[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*__[_0-9a-zA-Z][_0-9a-zA-Z]*;;[ \t]*$/ {
+  mname = $2
+  sub(/;$/, "", mname)
+
+  new_offset_struct_name = struct_name mname
+  print "struct " new_offset_struct_name " {"
+  if (past_members) print past_members
+  new_member = $0
   print new_member
   if (past_members) {
     past_members = past_members "\n" new_member
