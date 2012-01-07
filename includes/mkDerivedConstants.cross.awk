@@ -83,19 +83,19 @@ eat_union {
 }
 
 ## exclude some complicated ones
-/typedef struct StgFunInfoExtraFwd_ {/ {
+/^typedef struct StgFunInfoExtraFwd_ {$/ {
   next
 }
-/typedef struct StgInfoTable_ {/ {
+/^typedef struct StgInfoTable_ {$/ {
   next
 }
-/typedef struct StgClosure_ {/ {
+/^typedef struct StgClosure_ {$/ {
   next
 }
-/typedef struct generation_ {/ {
+/^typedef struct generation_ {$/ {
   next
 }
-/struct [_A-Z]*_FLAGS {/ {
+/^struct [A-Z][_A-Z]*_FLAGS {$/ {
   next
 }
 
@@ -257,6 +257,31 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA
   print "struct " new_offset_struct_name " {"
   if (past_members) print past_members
   new_member = "  " $1 " " $2 ";"
+  print new_member
+  if (past_members) {
+    past_members = past_members "\n" new_member
+  } else {
+    past_members = new_member
+  }
+  print "};"
+  print ""
+  offset_struct_name = new_offset_struct_name
+
+  print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  print ""
+  print ""
+  next
+}
+
+## struct member of struct
+##
+interesting && /^[ \t]*struct[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*;[ \t]*$/ {
+  sub(/;$/, "", $3)
+
+  new_offset_struct_name = struct_name $3
+  print "struct " new_offset_struct_name " {"
+  if (past_members) print past_members
+  new_member = "  struct " $2 " " $3 ";"
   print new_member
   if (past_members) {
     past_members = past_members "\n" new_member
