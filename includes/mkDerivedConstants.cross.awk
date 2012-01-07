@@ -83,9 +83,6 @@ eat_union {
 }
 
 ## exclude some complicated ones
-/^typedef struct StgInfoTable_ {$/ {
-  next
-}
 /^typedef struct generation_ {$/ {
   next
 }
@@ -336,7 +333,7 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA
 ## padded member of struct
 ##   of this form: StgHalfInt slow_apply_offset; StgHalfWord __pad_slow_apply_offset;;
 ##
-interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*;[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*__[_0-9a-zA-Z][_0-9a-zA-Z]*;;[ \t]*$/ {
+interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*;[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*__pad_[a-zA-Z][_0-9a-zA-Z]*;;*[ \t]*$/ {
   mname = $2
   sub(/;$/, "", mname)
 
