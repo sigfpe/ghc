@@ -83,9 +83,6 @@ eat_union {
 }
 
 ## exclude some complicated ones
-/^typedef struct generation_ {$/ {
-  next
-}
 /^struct [A-Z][_A-Z]*_FLAGS {$/ {
   next
 }
