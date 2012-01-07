@@ -133,7 +133,7 @@ interesting && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/{
   print "char associate$" $2 "$" seed ";"
 
   
-  print "char SIZEOF" offset_struct_name "[sizeof(" $2 ")];"
+  print "char SIZEOF$" seed "[sizeof(" $2 ")];"
 
   print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" $2 ") ? 1 : -1];"
   print ""
@@ -150,7 +150,7 @@ interesting && /^[ \t]*}[ \t]*\*[_0-9a-zA-Z][_0-9a-zA-Z]*Ptr[ \t]*;[ \t]*$/{
   print "char associate$" $2 "$" seed ";"
 
   
-  print "char SIZEOF" offset_struct_name "[sizeof(" $2 ")];"
+  print "char SIZEOF$" seed "[sizeof(" $2 ")];"
 
   print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" $2 ") ? 1 : -1];"
   print ""
@@ -160,7 +160,7 @@ interesting && /^[ \t]*}[ \t]*\*[_0-9a-zA-Z][_0-9a-zA-Z]*Ptr[ \t]*;[ \t]*$/{
 }
 
 interesting && /^[ \t]*}[; \t]*$/ {
-  print "char SIZEOF" offset_struct_name "[sizeof(" known_struct_name ")];"
+  print "char SIZEOF$" seed "[sizeof(" known_struct_name ")];"
 
   # print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" known_struct_name ") ? 1 : -1];"
   print ""
@@ -298,13 +298,14 @@ interesting && /^[ \t]*union[ \t]*{[ \t]*$/ {
 }
 
 ## array member
-interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*\[.*\];[ \t]*$/ {
+interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*\**[_0-9a-zA-Z][_0-9a-zA-Z]*\[.*\];[ \t]*$/ {
   sub(/;[ \t]*$/, "", $0)
 
   full = $0
   sub(/^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*/, "", full)
   split(full, parts, "[")
   mname = parts[1]
+  sub(/^\**/, "", mname)
 
   new_offset_struct_name = struct_name mname
   print "struct " new_offset_struct_name " {"

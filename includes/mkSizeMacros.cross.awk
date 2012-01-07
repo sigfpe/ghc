@@ -22,4 +22,11 @@ BEGIN {
   next
 }
 
+/^0[0-9a-zA-Z]* C _*SIZEOF\$[0-9]*$/ {
+  sub(/_*SIZEOF\$/, "", $3)
+  sub(/^0*/, "", $1)
+  print "#define TYPE_SIZE_" assoc[$3] " 0x" $1
+  next
+}
+
 { print "// " $0 }
