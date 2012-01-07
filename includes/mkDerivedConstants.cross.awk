@@ -162,7 +162,7 @@ interesting && /^[ \t]*}[ \t]*\*[_0-9a-zA-Z][_0-9a-zA-Z]*Ptr[ \t]*;[ \t]*$/{
 interesting && /^[ \t]*}[; \t]*$/ {
   print "char SIZEOF$" seed "[sizeof(" known_struct_name ")];"
 
-  # print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" known_struct_name ") ? 1 : -1];"
+  print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" known_struct_name ") ? 1 : -1];"
   print ""
   print ""
   ++seed
