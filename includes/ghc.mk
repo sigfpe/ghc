@@ -159,14 +159,22 @@ includes/dist-derivedconstants/build/mkDerivedConstants$(exeext) : includes/dist
 includes/dist-derivedconstants/build/mkDerivedConstants$(exeext) : includes/mkDerivedConstants.c
 	$(CC_STAGE0) $(CONF_CPP_OPTS_STAGE0) $(rts_CC_OPTS) $(includes_CC_OPTS) $< -o $@
 
-#$(eval $(call build-prog,includes,dist-derivedconstants,0))
-#$(includes_dist-derivedconstants_depfile_c_asm) : $(includes_H_CONFIG) $(includes_H_PLATFORM) $(includes_H_FILES) $$(rts_H_FILES)
-#includes/dist-derivedconstants/build/mkDerivedConstants.o : includes/dist-derivedconstants/build/SizeMacros.h $(includes_H_CONFIG) $(includes_H_PLATFORM)
+$(INPLACE_BIN)/mkDerivedConstants$(exeext) : includes/dist-ghcconstants/build/mkDerivedConstants$(exeext)
+	$(CP) $< $@
 else
 includes/dist-derivedconstants/build/SizeMacros.h : | $$(dir $$@)/.
 	@echo "#define OFFSET(s_type, field) ((size_t)&(((s_type*)0)->field))" > $@
 	@echo "#define FIELD_SIZE(s_type, field) ((unsigned long)sizeof(((s_type*)0)->field))" >> $@
 	@echo "#define TYPE_SIZE(type) (sizeof(type))" >> $@
+	@echo "#define prof_ccs prof.ccs" >> $@
+	@echo "#define prof_cccs prof.cccs" >> $@
+	@echo "#define prof_hp_ldvw prof.hp.ldvw" >> $@
+	@echo "#define DebugFlags_apply DebugFlags.apply" >> $@
+	@echo "#define DebugFlags_sanity DebugFlags.sanity" >> $@
+	@echo "#define DebugFlags_weak DebugFlags.weak" >> $@
+	@echo "#define GcFlags_initialStkSize GcFlags.initialStkSize" >> $@
+	@echo "#define MiscFlags_tickInterval MiscFlags.tickInterval" >> $@
+	@echo "#define b_bitmap b.bitmap" >> $@
 	@echo >> $@
 
 includes_dist-derivedconstants_C_SRCS = mkDerivedConstants.c

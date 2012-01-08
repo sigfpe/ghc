@@ -181,7 +181,7 @@
     printf("#define SIZEOF_OPT_" #s_type " 0\n");			\
     printf("#endif\n\n");
 
-#define FUN_OFFSET(sym) (OFFSET(Capability,f.sym) - OFFSET(Capability,r))
+#define FUN_OFFSET(sym) (OFFSET(Capability,f) + OFFSET(StgFunTable,sym) - OFFSET(Capability,r))
 
 
 int
@@ -264,8 +264,8 @@ main(int argc, char *argv[])
     struct_field(CostCentre, link);
 
     struct_field(StgHeader, info);
-    struct_field_("StgHeader_ccs",  StgHeader, prof.ccs);
-    struct_field_("StgHeader_ldvw", StgHeader, prof.hp.ldvw);
+    struct_field_("StgHeader_ccs",  StgHeader, prof_ccs);     // member prof.ccs, see SizeMacros.h
+    struct_field_("StgHeader_ldvw", StgHeader, prof_hp_ldvw); // member prof.hp.ldvw, see SizeMacros.h
 
     struct_size(StgSMPThunkHeader);
 
@@ -301,7 +301,7 @@ main(int argc, char *argv[])
     closure_field(StgTSO, flags);
     closure_field(StgTSO, dirty);
     closure_field(StgTSO, bq);
-    closure_field_("StgTSO_cccs", StgTSO, prof.cccs);
+    closure_field_("StgTSO_cccs", StgTSO, prof_cccs); // member prof.cccs, see SizeMacros.h
     closure_field(StgTSO, stackobj);
 
     closure_field(StgStack, sp);
@@ -411,29 +411,29 @@ main(int argc, char *argv[])
     closure_field(MessageBlackHole, bh);
 
     struct_field_("RtsFlags_ProfFlags_showCCSOnException",
-		  RTS_FLAGS, ProfFlags.showCCSOnException);
+		  RTS_FLAGS, ProfFlags_showCCSOnException); // member ProfFlags.showCCSOnException, see SizeMacros.h
     struct_field_("RtsFlags_DebugFlags_apply",
-		  RTS_FLAGS, DebugFlags.apply);
+		  RTS_FLAGS, DebugFlags_apply);             // member DebugFlags.apply, see SizeMacros.h
     struct_field_("RtsFlags_DebugFlags_sanity",
-		  RTS_FLAGS, DebugFlags.sanity);
+		  RTS_FLAGS, DebugFlags_sanity);            // member DebugFlags.sanity, see SizeMacros.h
     struct_field_("RtsFlags_DebugFlags_weak",
-		  RTS_FLAGS, DebugFlags.weak);
+		  RTS_FLAGS, DebugFlags_weak);              // member DebugFlags.weak, see SizeMacros.h
     struct_field_("RtsFlags_GcFlags_initialStkSize",
-		  RTS_FLAGS, GcFlags.initialStkSize);
+		  RTS_FLAGS, GcFlags_initialStkSize);       // member GcFlags.initialStkSize, see SizeMacros.h
     struct_field_("RtsFlags_MiscFlags_tickInterval",
-		  RTS_FLAGS, MiscFlags.tickInterval);
+		  RTS_FLAGS, MiscFlags_tickInterval);       // member MiscFlags.tickInterval, see SizeMacros.h
 
     struct_size(StgFunInfoExtraFwd);
     struct_field(StgFunInfoExtraFwd, slow_apply);
     struct_field(StgFunInfoExtraFwd, fun_type);
     struct_field(StgFunInfoExtraFwd, arity);
-    struct_field_("StgFunInfoExtraFwd_bitmap", StgFunInfoExtraFwd, b.bitmap);
+    struct_field_("StgFunInfoExtraFwd_bitmap", StgFunInfoExtraFwd, b_bitmap); // member b.bitmap, see SizeMacros.h
 
     struct_size(StgFunInfoExtraRev);
     struct_field(StgFunInfoExtraRev, slow_apply_offset);
     struct_field(StgFunInfoExtraRev, fun_type);
     struct_field(StgFunInfoExtraRev, arity);
-    struct_field_("StgFunInfoExtraRev_bitmap", StgFunInfoExtraRev, b.bitmap);
+    struct_field_("StgFunInfoExtraRev_bitmap", StgFunInfoExtraRev, b_bitmap); // member b.bitmap, see SizeMacros.h
 
     struct_field(StgLargeBitmap, size);
     field_offset(StgLargeBitmap, bitmap);
