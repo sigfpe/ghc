@@ -14,8 +14,8 @@
 #define IN_STG_CODE 0
 
 /*
- * We need offsets of profiled things... better be careful that this
- * doesn't affect the offsets of anything else.
+ * We need offsets of profiled and threaded things... better be
+ * careful that this doesn't affect the offsets of anything else.
  */
 
 #define PROFILING
@@ -240,6 +240,7 @@ main(int argc, char *argv[])
     struct_field(Capability, context_switch);
     struct_field(Capability, interrupt);
 #ifdef THREADED_RTS
+    /* THREADED_RTS is actually always defined, see top of this file */
     field_offset(Capability, lock);
     struct_field(Capability, sparks);
 #endif
