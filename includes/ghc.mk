@@ -163,7 +163,7 @@ $(eval $(call build-prog,includes,dist-derivedconstants,0))
 $(includes_dist-derivedconstants_depfile_c_asm) : $(includes_H_CONFIG) $(includes_H_PLATFORM) $(includes_H_FILES) $$(rts_H_FILES)
 includes/dist-derivedconstants/build/mkDerivedConstants.o : includes/dist-derivedconstants/build/SizeMacros.h $(includes_H_CONFIG) $(includes_H_PLATFORM)
 else
-includes/dist-derivedconstants/build/SizeMacros.h: includes/dist-derivedconstants/build/.
+includes/dist-derivedconstants/build/SizeMacros.h : $$(dir $$@)/.
 	@echo "#define OFFSET(s_type, field) ((size_t)&(((s_type*)0)->field))" > $@
 	@echo "#define FIELD_SIZE(s_type, field) ((unsigned long)sizeof(((s_type*)0)->field))" >> $@
 	@echo "#define TYPE_SIZE(type) (sizeof(type))" >> $@
@@ -175,7 +175,7 @@ includes_dist-derivedconstants_PROG   = mkDerivedConstants$(exeext)
 
 $(eval $(call build-prog,includes,dist-derivedconstants,0))
 
-$(includes_dist-derivedconstants_depfile_c_asm) : includes/dist-derivedconstants/build/SizeMacros.h $(includes_H_CONFIG) $(includes_H_PLATFORM) $(includes_H_FILES) $$(rts_H_FILES)
+$(includes_dist-derivedconstants_depfile_c_asm) : $(includes_H_CONFIG) $(includes_H_PLATFORM) $(includes_H_FILES) $$(rts_H_FILES)
 includes/dist-derivedconstants/build/mkDerivedConstants.o : includes/dist-derivedconstants/build/SizeMacros.h $(includes_H_CONFIG) $(includes_H_PLATFORM)
 endif
 
@@ -206,7 +206,7 @@ includes_dist-ghcconstants_CC_OPTS = -DGEN_HASKELL -Iincludes/dist-derivedconsta
 $(eval $(call build-prog,includes,dist-ghcconstants,0))
 
 ifneq "$(BINDIST)" "YES"
-$(includes_dist-ghcconstants_depfile_c_asm) : includes/dist-derivedconstants/build/SizeMacros.h $(includes_H_CONFIG) $(includes_H_PLATFORM) $(includes_H_FILES) $$(rts_H_FILES)
+$(includes_dist-ghcconstants_depfile_c_asm) : $(includes_H_CONFIG) $(includes_H_PLATFORM) $(includes_H_FILES) $$(rts_H_FILES)
 
 includes/dist-ghcconstants/build/mkDerivedConstants.o : includes/dist-derivedconstants/build/SizeMacros.h $(includes_H_CONFIG) $(includes_H_PLATFORM)
 
