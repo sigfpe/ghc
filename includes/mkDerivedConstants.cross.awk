@@ -87,15 +87,6 @@ eat_union {
   next
 }
 
-## kill comments
-/\/\*.*\*\// {
-    gsub(/\/\*.*\*\//, "")
-}
-
-/\/\/.*$/ {
-    sub(/\/\/.*$/, "")
-}
-
 ## kill empty line
 /^[ \t]*$/ {
   next
@@ -162,6 +153,13 @@ interesting && /^[ \t]*}[ \t]*\*[_0-9a-zA-Z][_0-9a-zA-Z]*Ptr[ \t]*;[ \t]*$/{
 interesting && /^[ \t]*}[; \t]*$/ {
   print "char SIZEOF$" seed "[sizeof(" known_struct_name ")];"
 
+  if (known_struct_name == "Capability") {
+      offset_struct_name = "aligned$" offset_struct_name
+      print "struct " offset_struct_name " {"
+      if (past_members) print past_members
+      print "} ATTRIBUTE_ALIGNED(64);"
+  }
+
   print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" known_struct_name ") ? 1 : -1];"
   print ""
   print ""
@@ -171,7 +169,10 @@ interesting && /^[ \t]*}[; \t]*$/ {
 
 # collapse whitespace after '*'
 interesting {
+  # normalize some types
+  sub(/struct StgClosure_[ \t]*\*/, "StgClosure *")
   gsub(/\*[ \t]*volatile/, "*")
+  # group stars together
   gsub(/\*[ \t]*/, "*")
   sub(/\*/, " *")
   print "//   " $0
@@ -353,4 +354,9 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA
   print ""
   print ""
   next
+}
+
+interesting && /;[ \t]*$/ {
+  print "Member not recognized: " $0 > "/dev/stderr"
+  exit 1
 }

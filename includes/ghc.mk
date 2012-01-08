@@ -140,29 +140,28 @@ DerivedConstants.h :
 else
 
 ifneq "$(TARGETPLATFORM)dd" "$(HOSTPLATFORM)"
-includes/boot-derivedheaders/build/Capability.cross.h: rts/Capability.h | $$(dir $$@)/.
-	$(CC_STAGE1) -E $(CONF_CPP_OPTS_STAGE1) $(error rts_CC_OPTS = $(rts_CC_OPTS) "##") $< > $@
-includes/boot-derivedheaders/build/Rts.cross.h: includes/Rts.h | $$(dir $$@)/.
-	$(CC_STAGE1) -E $(CONF_CPP_OPTS_STAGE1) $(includes_CC_OPTS) $< > $@
-includes/boot-derivedheaders/build/mkDerivedConstants.cross.c: includes/boot-derivedheaders/build/Rts.cross.h includes/boot-derivedheaders/build/Capability.cross.h
+includes/dist-derivedconstants/build/Capability.cross.h: rts/Capability.h | $$(dir $$@)/.
+	$(CC_STAGE1) -E -DPROFILING -DTHREADED_RTS $(CONF_CPP_OPTS_STAGE1) $(rts_CC_OPTS) $< > $@
+includes/dist-derivedconstants/build/Rts.cross.h: includes/Rts.h | $$(dir $$@)/.
+	$(CC_STAGE1) -E -DPROFILING -DTHREADED_RTS $(CONF_CPP_OPTS_STAGE1) $(includes_CC_OPTS) $< > $@
+includes/dist-derivedconstants/build/mkDerivedConstants.cross.c: includes/dist-derivedconstants/build/Rts.cross.h includes/dist-derivedconstants/build/Capability.cross.h
 	awk -f includes/mkDerivedConstants.cross.awk $^ > $@
-includes/boot-derivedheaders/build/mkDerivedConstants.cross.o: includes/boot-derivedheaders/build/mkDerivedConstants.cross.c
-	$(CC_STAGE1) -c $(CONF_CPP_OPTS_STAGE1) $(rts_CC_OPTS) $(includes_CC_OPTS) -fcommon $< -o $@
-includes/dist-derivedconstants/build/SizeMacros.h: includes/boot-derivedheaders/build/mkDerivedConstants.cross.o | $$(dir $$@)/.
+includes/dist-derivedconstants/build/mkDerivedConstants.cross.o: includes/dist-derivedconstants/build/mkDerivedConstants.cross.c
+	$(CC_STAGE1) -c -DPROFILING -DTHREADED_RTS $(CONF_CPP_OPTS_STAGE1) $(rts_CC_OPTS) $(includes_CC_OPTS) -fcommon $< -o $@
+includes/dist-derivedconstants/build/SizeMacros.h: includes/dist-derivedconstants/build/mkDerivedConstants.cross.o | $$(dir $$@)/.
 	$(NM) $< | $(SORT) | awk -f includes/mkSizeMacros.cross.awk > $@
-###includes_boot-derivedheaders_C_SRCS = includes/mkDerivedConstants.cross.c
-###includes_boot-derivedheaders_CC_OPTS = -fcommon
-###includes_boot-derivedheaders_UseGhcForCC = "NO"
-###$(eval $(call build-package,includes,boot-derivedheaders,1))
 
 includes_dist-derivedconstants_C_SRCS = mkDerivedConstants.c
-##includes/boot-derivedheaders/build/mkDerivedConstants.cross.o : $(includes_H_CONFIG) $(includes_H_PLATFORM)
 # XXX NM_STAGE1 AWK
 includes_dist-derivedconstants_PROG   = mkDerivedConstants$(exeext)
 
-$(eval $(call build-prog,includes,dist-derivedconstants,0))
-$(includes_dist-derivedconstants_depfile_c_asm) : $(includes_H_CONFIG) $(includes_H_PLATFORM) $(includes_H_FILES) $$(rts_H_FILES)
-includes/dist-derivedconstants/build/mkDerivedConstants.o : includes/dist-derivedconstants/build/SizeMacros.h $(includes_H_CONFIG) $(includes_H_PLATFORM)
+includes/dist-derivedconstants/build/mkDerivedConstants$(exeext) : includes/dist-derivedconstants/build/SizeMacros.h
+includes/dist-derivedconstants/build/mkDerivedConstants$(exeext) : includes/mkDerivedConstants.c
+	$(CC_STAGE0) $(CONF_CPP_OPTS_STAGE0) $(rts_CC_OPTS) $(includes_CC_OPTS) $< -o $@
+
+#$(eval $(call build-prog,includes,dist-derivedconstants,0))
+#$(includes_dist-derivedconstants_depfile_c_asm) : $(includes_H_CONFIG) $(includes_H_PLATFORM) $(includes_H_FILES) $$(rts_H_FILES)
+#includes/dist-derivedconstants/build/mkDerivedConstants.o : includes/dist-derivedconstants/build/SizeMacros.h $(includes_H_CONFIG) $(includes_H_PLATFORM)
 else
 includes/dist-derivedconstants/build/SizeMacros.h : | $$(dir $$@)/.
 	@echo "#define OFFSET(s_type, field) ((size_t)&(((s_type*)0)->field))" > $@
@@ -200,6 +199,13 @@ $(includes_GHCCONSTANTS) :
 
 else
 
+ifneq "$(TARGETPLATFORM)dd" "$(HOSTPLATFORM)"
+includes/dist-ghcconstants/build/mkDerivedConstants$(exeext) : includes/dist-derivedconstants/build/SizeMacros.h
+includes/dist-ghcconstants/build/mkDerivedConstants$(exeext) : includes/mkDerivedConstants.c
+	$(CC_STAGE0) -DGEN_HASKELL -Iincludes/dist-derivedconstants/build $(CONF_CPP_OPTS_STAGE0) $(rts_CC_OPTS) $(includes_CC_OPTS) $< -o $@
+$(INPLACE_BIN)/mkGHCConstants$(exeext) : includes/dist-ghcconstants/build/mkDerivedConstants$(exeext)
+	$(CP) $< $@
+else
 includes_dist-ghcconstants_C_SRCS = mkDerivedConstants.c
 includes_dist-ghcconstants_PROG   = mkGHCConstants$(exeext)
 includes_dist-ghcconstants_CC_OPTS = -DGEN_HASKELL -Iincludes/dist-derivedconstants/build
@@ -211,9 +217,12 @@ $(includes_dist-ghcconstants_depfile_c_asm) : $(includes_H_CONFIG) $(includes_H_
 
 includes/dist-ghcconstants/build/mkDerivedConstants.o : includes/dist-derivedconstants/build/SizeMacros.h $(includes_H_CONFIG) $(includes_H_PLATFORM)
 
+endif
+
+endif
+
 $(includes_GHCCONSTANTS) : $(INPLACE_BIN)/mkGHCConstants$(exeext) | $$(dir $$@)/.
 	./$< >$@
-endif
 
 endif
 
