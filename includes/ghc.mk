@@ -139,7 +139,7 @@ DerivedConstants.h :
 
 else
 
-ifneq "$(TARGETPLATFORM)dd" "$(HOSTPLATFORM)"
+ifneq "$(TARGETPLATFORM)" "$(HOSTPLATFORM)"
 includes/dist-derivedconstants/build/Capability.cross.h: rts/Capability.h | $$(dir $$@)/.
 	$(CC_STAGE1) -E -DPROFILING -DTHREADED_RTS $(CONF_CPP_OPTS_STAGE1) $(rts_CC_OPTS) $< > $@
 includes/dist-derivedconstants/build/Rts.cross.h: includes/Rts.h | $$(dir $$@)/.
@@ -168,6 +168,7 @@ includes/dist-derivedconstants/build/SizeMacros.h : | $$(dir $$@)/.
 	@echo "#define OFFSET(s_type, field) ((size_t)&(((s_type*)0)->field))" > $@
 	@echo "#define FIELD_SIZE(s_type, field) ((unsigned long)sizeof(((s_type*)0)->field))" >> $@
 	@echo "#define TYPE_SIZE(type) (sizeof(type))" >> $@
+	@echo >> $@
 	@echo "#define prof_ccs prof.ccs" >> $@
 	@echo "#define prof_cccs prof.cccs" >> $@
 	@echo "#define prof_hp_ldvw prof.hp.ldvw" >> $@
@@ -176,6 +177,7 @@ includes/dist-derivedconstants/build/SizeMacros.h : | $$(dir $$@)/.
 	@echo "#define DebugFlags_weak DebugFlags.weak" >> $@
 	@echo "#define GcFlags_initialStkSize GcFlags.initialStkSize" >> $@
 	@echo "#define MiscFlags_tickInterval MiscFlags.tickInterval" >> $@
+	@echo "#define ProfFlags_showCCSOnException ProfFlags.showCCSOnException" >> $@
 	@echo "#define b_bitmap b.bitmap" >> $@
 	@echo >> $@
 
@@ -209,7 +211,7 @@ $(includes_GHCCONSTANTS) :
 
 else
 
-ifneq "$(TARGETPLATFORM)dd" "$(HOSTPLATFORM)"
+ifneq "$(TARGETPLATFORM)" "$(HOSTPLATFORM)"
 includes/dist-ghcconstants/build/mkDerivedConstants$(exeext) : includes/dist-derivedconstants/build/SizeMacros.h
 includes/dist-ghcconstants/build/mkDerivedConstants$(exeext) : includes/mkDerivedConstants.c
 	$(CC_STAGE0) -DGEN_HASKELL -Iincludes/dist-derivedconstants/build $(CONF_CPP_OPTS_STAGE0) $(rts_CC_OPTS) $(includes_CC_OPTS) $< -o $@
