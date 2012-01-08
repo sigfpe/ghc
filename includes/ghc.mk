@@ -139,23 +139,24 @@ DerivedConstants.h :
 
 else
 
-ifneq "$(TARGETPLATFORM)" "$(HOSTPLATFORM)"
-$(error NOT YET!)
-includes/boot-derivedheaders/build/Capability.cross.h: rts/Capability.h
-	$(CC_STAGE1) -E $(CONF_CPP_OPTS_STAGE1) $(rts_CC_OPTS) $< > $@
-includes/boot-derivedheaders/build/Rts.cross.h: includes/Rts.h
+ifneq "$(TARGETPLATFORM)dd" "$(HOSTPLATFORM)"
+includes/boot-derivedheaders/build/Capability.cross.h: rts/Capability.h | $$(dir $$@)/.
+	$(CC_STAGE1) -E $(CONF_CPP_OPTS_STAGE1) $(error rts_CC_OPTS = $(rts_CC_OPTS) "##") $< > $@
+includes/boot-derivedheaders/build/Rts.cross.h: includes/Rts.h | $$(dir $$@)/.
 	$(CC_STAGE1) -E $(CONF_CPP_OPTS_STAGE1) $(includes_CC_OPTS) $< > $@
 includes/boot-derivedheaders/build/mkDerivedConstants.cross.c: includes/boot-derivedheaders/build/Rts.cross.h includes/boot-derivedheaders/build/Capability.cross.h
 	awk -f includes/mkDerivedConstants.cross.awk $^ > $@
-includes/dist-derivedconstants/build/SizeMacros.h: includes/boot-derivedheaders/build/mkDerivedConstants.cross.o
+includes/boot-derivedheaders/build/mkDerivedConstants.cross.o: includes/boot-derivedheaders/build/mkDerivedConstants.cross.c
+	$(CC_STAGE1) -c $(CONF_CPP_OPTS_STAGE1) $(rts_CC_OPTS) $(includes_CC_OPTS) -fcommon $< -o $@
+includes/dist-derivedconstants/build/SizeMacros.h: includes/boot-derivedheaders/build/mkDerivedConstants.cross.o | $$(dir $$@)/.
 	$(NM) $< | $(SORT) | awk -f includes/mkSizeMacros.cross.awk > $@
-includes_boot-derivedheaders_C_SRCS = includes/mkDerivedConstants.cross.c
-includes_boot-derivedheaders_CC_OPTS = -fcommon
-includes_boot-derivedheaders_UseGhcForCC = "NO"
-$(eval $(call build-package,includes,boot-derivedheaders,1))
+###includes_boot-derivedheaders_C_SRCS = includes/mkDerivedConstants.cross.c
+###includes_boot-derivedheaders_CC_OPTS = -fcommon
+###includes_boot-derivedheaders_UseGhcForCC = "NO"
+###$(eval $(call build-package,includes,boot-derivedheaders,1))
 
 includes_dist-derivedconstants_C_SRCS = mkDerivedConstants.c
-includes/boot-derivedheaders/build/mkDerivedConstants.cross.o : $(includes_H_CONFIG) $(includes_H_PLATFORM)
+##includes/boot-derivedheaders/build/mkDerivedConstants.cross.o : $(includes_H_CONFIG) $(includes_H_PLATFORM)
 # XXX NM_STAGE1 AWK
 includes_dist-derivedconstants_PROG   = mkDerivedConstants$(exeext)
 
@@ -163,7 +164,7 @@ $(eval $(call build-prog,includes,dist-derivedconstants,0))
 $(includes_dist-derivedconstants_depfile_c_asm) : $(includes_H_CONFIG) $(includes_H_PLATFORM) $(includes_H_FILES) $$(rts_H_FILES)
 includes/dist-derivedconstants/build/mkDerivedConstants.o : includes/dist-derivedconstants/build/SizeMacros.h $(includes_H_CONFIG) $(includes_H_PLATFORM)
 else
-includes/dist-derivedconstants/build/SizeMacros.h : $$(dir $$@)/.
+includes/dist-derivedconstants/build/SizeMacros.h : | $$(dir $$@)/.
 	@echo "#define OFFSET(s_type, field) ((size_t)&(((s_type*)0)->field))" > $@
 	@echo "#define FIELD_SIZE(s_type, field) ((unsigned long)sizeof(((s_type*)0)->field))" >> $@
 	@echo "#define TYPE_SIZE(type) (sizeof(type))" >> $@
