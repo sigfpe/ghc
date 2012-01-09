@@ -531,6 +531,10 @@ if test "$BootingFromHc" = "NO"; then
 FPTOOLS_ALEX
 fi;
 
+dnl ** check for an AWK variant, it is needed by libffi
+dnl    and cross-compiling
+AC_PROG_AWK
+
 dnl --------------------------------------------------
 dnl ### program checking section ends here ###
 dnl --------------------------------------------------
