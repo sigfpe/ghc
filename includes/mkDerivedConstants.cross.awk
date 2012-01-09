@@ -206,6 +206,7 @@ interesting && /^[ \t]*struct[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*\*[ \t]*[
   offset_struct_name = new_offset_struct_name
 
   print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  print "char fieldsize" offset_struct_name "[sizeof(struct " $2 "*)];"
   print ""
   print ""
   next
@@ -232,6 +233,7 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*\*\**[_0-9a-zA-Z][_0-
   offset_struct_name = new_offset_struct_name
 
   print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  print "char fieldsize" offset_struct_name "[sizeof(" $1 "*)];"
   print ""
   print ""
   next
@@ -257,6 +259,7 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA
   offset_struct_name = new_offset_struct_name
 
   print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  print "char fieldsize" offset_struct_name "[sizeof(" $1 ")];"
   print ""
   print ""
   next
@@ -282,6 +285,7 @@ interesting && /^[ \t]*struct[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-
   offset_struct_name = new_offset_struct_name
 
   print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  print "char fieldsize" offset_struct_name "[sizeof(struct " $2 ")];"
   print ""
   print ""
   next
