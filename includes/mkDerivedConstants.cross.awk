@@ -22,6 +22,23 @@ BEGIN {
   print "#include \"Rts.h\""
   print "#include \"Capability.h\""
   print ""
+  ## these do not have a proper typedef; supply them here
+  print "#define FLAG_STRUCT_TYPE(IT) typedef struct IT ## _FLAGS IT ## _FLAGS"
+  print "FLAG_STRUCT_TYPE(GC);"
+  print "FLAG_STRUCT_TYPE(DEBUG);"
+  print "FLAG_STRUCT_TYPE(COST_CENTRE);"
+  print "FLAG_STRUCT_TYPE(PROFILING);"
+  print "FLAG_STRUCT_TYPE(TRACE);"
+  print "FLAG_STRUCT_TYPE(CONCURRENT);"
+  print "FLAG_STRUCT_TYPE(MISC);"
+  print "FLAG_STRUCT_TYPE(PAR);"
+  print "FLAG_STRUCT_TYPE(TICKY);"
+  ## these we do know how to get the field size,
+  ## so do not bother mining it
+  print "#define DO_NOT_MINE_UNION_MEMBER(STRUCT, NESTED_MEMBER, ID) char nestedfieldsize$ ## STRUCT ## $ ## ID [sizeof ((STRUCT*)0)->NESTED_MEMBER]"
+  print "DO_NOT_MINE_UNION_MEMBER(StgHeader, prof.hp.ldvw, prof_hp_ldvw);"
+  print "DO_NOT_MINE_UNION_MEMBER(StgFunInfoExtraFwd, b.bitmap, b_bitmap);"
+  print "DO_NOT_MINE_UNION_MEMBER(StgFunInfoExtraRev, b.bitmap, b_bitmap);"
 }
 
 ## pass through embedded unions
@@ -80,11 +97,6 @@ eat_union {
   past_members = ""
   known_struct_name = ""
   eat_union = 0
-}
-
-## exclude some complicated ones
-/^struct [A-Z][_A-Z]*_FLAGS {$/ {
-  next
 }
 
 ## kill empty line
