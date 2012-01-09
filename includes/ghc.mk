@@ -211,7 +211,7 @@ else
 
 ifneq "$(TARGETPLATFORM)" "$(HOSTPLATFORM)"
 includes/dist-ghcconstants/build/mkDerivedConstants$(exeext) : includes/dist-derivedconstants/build/SizeMacros.h
-includes/dist-ghcconstants/build/mkDerivedConstants$(exeext) : includes/mkDerivedConstants.c
+includes/dist-ghcconstants/build/mkDerivedConstants$(exeext) : includes/mkDerivedConstants.c | $$(dir $$@)/.
 	$(CC_STAGE0) -DGEN_HASKELL -Iincludes/dist-derivedconstants/build $(CONF_CPP_OPTS_STAGE0) $(rts_CC_OPTS) $(includes_CC_OPTS) $< -o $@
 $(INPLACE_BIN)/mkGHCConstants$(exeext) : includes/dist-ghcconstants/build/mkDerivedConstants$(exeext)
 	$(CP) $< $@
