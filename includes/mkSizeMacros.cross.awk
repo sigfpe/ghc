@@ -12,6 +12,14 @@ BEGIN {
   next
 }
 
+/^00*2 C _*starting\$[0-9]*\$[_0-9a-zA-Z]*$/ {
+  sub(/_*starting\$/, "", $3)
+  split($3, arr, "$")
+  sub(/^0*/, "", $1)
+  print "#define OFFSET_" assoc[arr[1]] "_" arr[2] " 0x0"
+  next
+}
+
 /^0[0-9a-zA-Z]* C _*sizeof\$[0-9]*\$[_0-9a-zA-Z]*$/ {
   sub(/_*sizeof\$/, "", $3)
   split($3, arr, "$")
