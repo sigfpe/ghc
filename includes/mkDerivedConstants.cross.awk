@@ -55,9 +55,18 @@ eat_union && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ {
   eat_union = 0
   print "};"
   print ""
-  offset_struct_name = new_offset_struct_name
 
-  print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  if (!offset_struct_name)
+  {
+    print "char starting" new_offset_struct_name "[2];"
+  }
+  else
+  {
+    assumptions = assumptions "\n" "char sizeof" new_offset_struct_name "[offsetof(^^^, " $0 ")];"
+    assumptions = assumptions "\n" "typedef char verify_size" new_offset_struct_name "[sizeof sizeof" new_offset_struct_name " == offsetof(^^^, " $0 ") ? 1 : -1];"
+  }
+
+  offset_struct_name = new_offset_struct_name
   next
 }
 
@@ -224,17 +233,17 @@ interesting && /^[ \t]*struct[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*\*[ \t]*[
   }
   print "};"
   print ""
+
   if (!offset_struct_name)
   {
     print "char starting" new_offset_struct_name "[2];"
   }
   else
   {
-    assumptions = assumptions "\ntypedef char verify_size" new_offset_struct_name "[sizeof sizeof" new_offset_struct_name " == offsetof(^^^, " $4 ") ? 1 : -1];"
-    print "char sizeof" new_offset_struct_name "[sizeof(struct " offset_struct_name ")];"
-    print "char fieldsize" new_offset_struct_name "[sizeof(struct " $2 "*)];"
+    assumptions = assumptions "\n" "char sizeof" new_offset_struct_name "[offsetof(^^^, " $4 ")];"
+    assumptions = assumptions "\n" "typedef char verify_size" new_offset_struct_name "[sizeof sizeof" new_offset_struct_name " == offsetof(^^^, " $4 ") ? 1 : -1];"
   }
-
+  print "char fieldsize" new_offset_struct_name "[sizeof(struct " $2 "*)];"
   print ""
   print ""
   offset_struct_name = new_offset_struct_name
@@ -266,10 +275,10 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*\*\**[_0-9a-zA-Z][_0-
   }
   else
   {
-    assumptions = assumptions "\ntypedef char verify_size" new_offset_struct_name "[sizeof sizeof" new_offset_struct_name " == offsetof(^^^, " $2 ") ? 1 : -1];"
-    print "char sizeof" new_offset_struct_name "[sizeof(struct " offset_struct_name ")];"
-    print "char fieldsize" new_offset_struct_name "[sizeof(" $1 "*)];"
+    assumptions = assumptions "\n" "char sizeof" new_offset_struct_name "[offsetof(^^^, " $2 ")];"
+    assumptions = assumptions "\n" "typedef char verify_size" new_offset_struct_name "[sizeof sizeof" new_offset_struct_name " == offsetof(^^^, " $2 ") ? 1 : -1];"
   }
+  print "char fieldsize" new_offset_struct_name "[sizeof(" $1 "*)];"
   print ""
   print ""
   offset_struct_name = new_offset_struct_name
@@ -293,12 +302,20 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA
   }
   print "};"
   print ""
-  offset_struct_name = new_offset_struct_name
 
-  print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
-  print "char fieldsize" offset_struct_name "[sizeof(" $1 ")];"
+  if (!offset_struct_name)
+  {
+    print "char starting" new_offset_struct_name "[2];"
+  }
+  else
+  {
+    assumptions = assumptions "\n" "char sizeof" new_offset_struct_name "[offsetof(^^^, " $2 ")];"
+    assumptions = assumptions "\n" "typedef char verify_size" new_offset_struct_name "[sizeof sizeof" new_offset_struct_name " == offsetof(^^^, " $2 ") ? 1 : -1];"
+  }
+  print "char fieldsize" new_offset_struct_name "[sizeof(" $1 ")];"
   print ""
   print ""
+  offset_struct_name = new_offset_struct_name
   next
 }
 
@@ -319,12 +336,20 @@ interesting && /^[ \t]*struct[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-
   }
   print "};"
   print ""
-  offset_struct_name = new_offset_struct_name
 
-  print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
-  print "char fieldsize" offset_struct_name "[sizeof(struct " $2 ")];"
+  if (!offset_struct_name)
+  {
+    print "char starting" new_offset_struct_name "[2];"
+  }
+  else
+  {
+    assumptions = assumptions "\n" "char sizeof" new_offset_struct_name "[offsetof(^^^, " $3 ")];"
+    assumptions = assumptions "\n" "typedef char verify_size" new_offset_struct_name "[sizeof sizeof" new_offset_struct_name " == offsetof(^^^, " $3 ") ? 1 : -1];"
+  }
+  print "char fieldsize" new_offset_struct_name "[sizeof(struct " $2 ")];"
   print ""
   print ""
+  offset_struct_name = new_offset_struct_name
   next
 }
 
@@ -361,11 +386,20 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*\**[_0-9a-zA-Z][_0-9a
   }
   print "};"
   print ""
-  offset_struct_name = new_offset_struct_name
 
-  print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  if (!offset_struct_name)
+  {
+    print "char starting" new_offset_struct_name "[2];"
+  }
+  else
+  {
+    assumptions = assumptions "\n" "char sizeof" new_offset_struct_name "[offsetof(^^^, " mname ")];"
+    assumptions = assumptions "\n" "typedef char verify_size" new_offset_struct_name "[sizeof sizeof" new_offset_struct_name " == offsetof(^^^, " mname ") ? 1 : -1];"
+  }
+
   print ""
   print ""
+  offset_struct_name = new_offset_struct_name
   next
 }
 
@@ -389,11 +423,19 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA
   }
   print "};"
   print ""
-  offset_struct_name = new_offset_struct_name
 
-  print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+  if (!offset_struct_name)
+  {
+    print "char starting" new_offset_struct_name "[2];"
+  }
+  else
+  {
+    assumptions = assumptions "\n" "char sizeof" new_offset_struct_name "[offsetof(^^^, " mname ")];"
+    assumptions = assumptions "\n" "typedef char verify_size" new_offset_struct_name "[sizeof sizeof" new_offset_struct_name " == offsetof(^^^, " mname ") ? 1 : -1];"
+  }
   print ""
   print ""
+  offset_struct_name = new_offset_struct_name
   next
 }
 
