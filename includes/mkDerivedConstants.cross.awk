@@ -97,6 +97,7 @@ eat_union {
   past_members = ""
   known_struct_name = ""
   eat_union = 0
+  assumptions = ""
 }
 
 ## kill empty line
@@ -141,8 +142,11 @@ interesting && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/{
   print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" $2 ") ? 1 : -1];"
   print ""
   print ""
+  gsub(/\^\^\^/, $2, assumptions);
+  print assumptions
   ++seed
   interesting = 0
+  next
 }
 
 ## Ptr-typedef
@@ -158,8 +162,11 @@ interesting && /^[ \t]*}[ \t]*\*[_0-9a-zA-Z][_0-9a-zA-Z]*Ptr[ \t]*;[ \t]*$/{
   print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" $2 ") ? 1 : -1];"
   print ""
   print ""
+  gsub(/\^\^\^/, $2, assumptions);
+  print assumptions
   ++seed
   interesting = 0
+  next
 }
 
 interesting && /^[ \t]*}[; \t]*$/ {
@@ -175,6 +182,8 @@ interesting && /^[ \t]*}[; \t]*$/ {
   print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" known_struct_name ") ? 1 : -1];"
   print ""
   print ""
+  gsub(/\^\^\^/, known_struct_name, assumptions);
+  print assumptions
   ++seed
   interesting = 0
 }
@@ -215,12 +224,20 @@ interesting && /^[ \t]*struct[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*\*[ \t]*[
   }
   print "};"
   print ""
-  offset_struct_name = new_offset_struct_name
+  if (!offset_struct_name)
+  {
+    print "char starting" new_offset_struct_name "[2];"
+  }
+  else
+  {
+    assumptions = assumptions "\ntypedef char verify_size" new_offset_struct_name "[sizeof sizeof" new_offset_struct_name " == offsetof(^^^, " $4 ") ? 1 : -1];"
+    print "char sizeof" new_offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+    print "char fieldsize" new_offset_struct_name "[sizeof(struct " $2 "*)];"
+  }
 
-  print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
-  print "char fieldsize" offset_struct_name "[sizeof(struct " $2 "*)];"
   print ""
   print ""
+  offset_struct_name = new_offset_struct_name
   next
 }
 
@@ -242,12 +259,20 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*\*\**[_0-9a-zA-Z][_0-
   }
   print "};"
   print ""
-  offset_struct_name = new_offset_struct_name
 
-  print "char sizeof" offset_struct_name "[sizeof(struct " offset_struct_name ")];"
-  print "char fieldsize" offset_struct_name "[sizeof(" $1 "*)];"
+  if (!offset_struct_name)
+  {
+    print "char starting" new_offset_struct_name "[2];"
+  }
+  else
+  {
+    assumptions = assumptions "\ntypedef char verify_size" new_offset_struct_name "[sizeof sizeof" new_offset_struct_name " == offsetof(^^^, " $2 ") ? 1 : -1];"
+    print "char sizeof" new_offset_struct_name "[sizeof(struct " offset_struct_name ")];"
+    print "char fieldsize" new_offset_struct_name "[sizeof(" $1 "*)];"
+  }
   print ""
   print ""
+  offset_struct_name = new_offset_struct_name
   next
 }
 
