@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------
 #
-# (c) 2009 The University of Glasgow
+# (c) 2009-2012 The University of Glasgow
 #
 # This file is part of the GHC build system.
 #
@@ -34,6 +34,10 @@ compiler_CONFIG_HS = compiler/main/Config.hs
 compiler_stage1_MKDEPENDC_OPTS = -DMAKING_GHC_BUILD_SYSTEM_DEPENDENCIES
 compiler_stage2_MKDEPENDC_OPTS = -DMAKING_GHC_BUILD_SYSTEM_DEPENDENCIES
 compiler_stage3_MKDEPENDC_OPTS = -DMAKING_GHC_BUILD_SYSTEM_DEPENDENCIES
+
+ifneq "$(TARGETPLATFORM)" "$(HOSTPLATFORM)"
+compiler_stage2_MKDEPENDC_OPTS += -DCOMPILING_GHC
+endif
 
 compiler_stage1_C_FILES_NODEPS = compiler/parser/cutils.c
 
@@ -137,9 +141,6 @@ else
 endif
 	@echo done.
 
-# XXX 2010-08-19: This is a legacy clean. Remove later.
-$(eval $(call clean-target,compiler,config_hs,compiler/main/Config.hs))
-
 # -----------------------------------------------------------------------------
 # Create platform includes
 
@@ -150,7 +151,18 @@ $(eval $(call clean-target,compiler,config_hs,compiler/main/Config.hs))
 
 PLATFORM_H = ghc_boot_platform.h
 
-compiler/stage1/$(PLATFORM_H) : mk/config.mk mk/project.mk | $$(dir $$@)/.
+ifneq "$(TARGETPLATFORM)" "$(HOSTPLATFORM)"
+--STAGE1-- = stageBlackHole
+--STAGE2-- = stage1
+compiler/stage2/$(PLATFORM_H): compiler/stage1/$(PLATFORM_H)
+	"$(CP)" $< $@
+else
+--STAGE1-- = stage1
+--STAGE2-- = stage2
+endif
+
+
+compiler/$(--STAGE1--)/$(PLATFORM_H) : mk/config.mk mk/project.mk | $$(dir $$@)/.
 	$(call removeFiles,$@)
 	@echo "Creating $@..."
 	@echo "#ifndef __PLATFORM_H__"                           >> $@
@@ -196,7 +208,7 @@ endif
 # For stage2 and above, the BUILD platform is the HOST of stage1, and
 # the HOST platform is the TARGET of stage1.  The TARGET remains the same
 # (stage1 is the cross-compiler, not stage2).
-compiler/stage2/$(PLATFORM_H) : mk/config.mk mk/project.mk | $$(dir $$@)/.
+compiler/$(--STAGE2--)/$(PLATFORM_H) : mk/config.mk mk/project.mk | $$(dir $$@)/.
 	$(call removeFiles,$@)
 	@echo "Creating $@..."
 	@echo "#ifndef __PLATFORM_H__"                            >> $@
@@ -426,6 +438,11 @@ compiler_stage3_SplitObjs = NO
 ifneq "$(filter-out 1,$(stage))" ""
 compiler_stage1_NOT_NEEDED = YES
 endif
+
+ifneq "$(TARGETPLATFORM)" "$(HOSTPLATFORM)"
+compiler_stage2_NOT_NEEDED = YES
+compiler_stage3_NOT_NEEDED = YES
+else
 # if stage is set to something other than "2" or "", disable stage 2
 ifneq "$(filter-out 2,$(stage))" ""
 compiler_stage2_NOT_NEEDED = YES
@@ -434,6 +451,8 @@ endif
 ifneq "$(stage)" "3"
 compiler_stage3_NOT_NEEDED = YES
 endif
+endif
+
 $(eval $(call build-package,compiler,stage1,0))
 $(eval $(call build-package,compiler,stage2,1))
 $(eval $(call build-package,compiler,stage3,2))
