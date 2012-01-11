@@ -43,18 +43,12 @@ BEGIN {
 
 ## pass through embedded unions
 eat_union && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ {
-  past_members = past_members "\n" $0
-
   sub(/^[ \t]*}[ \t]*/, "")
   sub(/[ \t]*;[ \t]*$/, "")
   new_offset_struct_name = struct_name $0
-
-  print "struct " new_offset_struct_name " {"
-  if (past_members) print past_members
+  print ""
 
   eat_union = 0
-  print "};"
-  print ""
 
   if (!offset_struct_name)
   {
@@ -71,7 +65,6 @@ eat_union && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/ {
 }
 
 eat_union {
-  past_members = past_members "\n" $0
   next
 }
 
@@ -95,15 +88,9 @@ eat_union {
   next
 }
 
-
-/#if IN_STG_CODE/ {
-  nextfile
-}
-
 !interesting {
   struct_name = "$" seed "$"
   offset_struct_name = ""
-  past_members = ""
   known_struct_name = ""
   eat_union = 0
   assumptions = ""
@@ -144,11 +131,7 @@ interesting && /^[ \t]*}[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*;[ \t]*$/{
   sub(/;$/, "", $2)
 
   print "char associate$" $2 "$" seed ";"
-
-  
   print "char SIZEOF$" seed "[sizeof(" $2 ")];"
-
-  print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" $2 ") ? 1 : -1];"
   print ""
   print ""
   gsub(/\^\^\^/, $2, assumptions);
@@ -164,11 +147,7 @@ interesting && /^[ \t]*}[ \t]*\*[_0-9a-zA-Z][_0-9a-zA-Z]*Ptr[ \t]*;[ \t]*$/{
   sub(/^\*/, "", $2)
 
   print "char associate$" $2 "$" seed ";"
-
-  
   print "char SIZEOF$" seed "[sizeof(" $2 ")];"
-
-  print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" $2 ") ? 1 : -1];"
   print ""
   print ""
   gsub(/\^\^\^/, $2, assumptions);
@@ -180,15 +159,6 @@ interesting && /^[ \t]*}[ \t]*\*[_0-9a-zA-Z][_0-9a-zA-Z]*Ptr[ \t]*;[ \t]*$/{
 
 interesting && /^[ \t]*}[; \t]*$/ {
   print "char SIZEOF$" seed "[sizeof(" known_struct_name ")];"
-
-  if (known_struct_name == "Capability") {
-      offset_struct_name = "aligned$" offset_struct_name
-      print "struct " offset_struct_name " {"
-      if (past_members) print past_members
-      print "} ATTRIBUTE_ALIGNED(64);"
-  }
-
-  print "typedef char verify" offset_struct_name "[sizeof(struct " offset_struct_name ") == sizeof(" known_struct_name ") ? 1 : -1];"
   print ""
   print ""
   gsub(/\^\^\^/, known_struct_name, assumptions);
@@ -222,16 +192,6 @@ interesting && /^[ \t]*struct[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t]*\*[ \t]*[
   sub(/;$/, "", $4)
 
   new_offset_struct_name = struct_name $4
-  print "struct " new_offset_struct_name " {"
-  if (past_members) print past_members
-  new_member = "  struct " $2 " * " $4 ";"
-  print new_member
-  if (past_members) {
-    past_members = past_members "\n" new_member
-  } else {
-    past_members = new_member
-  }
-  print "};"
   print ""
 
   if (!offset_struct_name)
@@ -257,16 +217,6 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*\*\**[_0-9a-zA-Z][_0-
   sub(/^\**/, "", $2)
 
   new_offset_struct_name = struct_name $2
-  print "struct " new_offset_struct_name " {"
-  if (past_members) print past_members
-  new_member = "  " $1 " * " $2 ";"
-  print new_member
-  if (past_members) {
-    past_members = past_members "\n" new_member
-  } else {
-    past_members = new_member
-  }
-  print "};"
   print ""
 
   if (!offset_struct_name)
@@ -291,16 +241,6 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA
   sub(/;$/, "", $2)
 
   new_offset_struct_name = struct_name $2
-  print "struct " new_offset_struct_name " {"
-  if (past_members) print past_members
-  new_member = "  " $1 " " $2 ";"
-  print new_member
-  if (past_members) {
-    past_members = past_members "\n" new_member
-  } else {
-    past_members = new_member
-  }
-  print "};"
   print ""
 
   if (!offset_struct_name)
@@ -325,16 +265,6 @@ interesting && /^[ \t]*struct[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-
   sub(/;$/, "", $3)
 
   new_offset_struct_name = struct_name $3
-  print "struct " new_offset_struct_name " {"
-  if (past_members) print past_members
-  new_member = "  struct " $2 " " $3 ";"
-  print new_member
-  if (past_members) {
-    past_members = past_members "\n" new_member
-  } else {
-    past_members = new_member
-  }
-  print "};"
   print ""
 
   if (!offset_struct_name)
@@ -355,11 +285,6 @@ interesting && /^[ \t]*struct[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-
 
 ## embedded union
 interesting && /^[ \t]*union[ \t]*{[ \t]*$/ {
-  if (past_members) {
-    past_members = past_members "\n" $0
-  } else {
-    past_members = $0
-  }
   eat_union = 1
   next
 }
@@ -375,16 +300,6 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*\**[_0-9a-zA-Z][_0-9a
   sub(/^\**/, "", mname)
 
   new_offset_struct_name = struct_name mname
-  print "struct " new_offset_struct_name " {"
-  if (past_members) print past_members
-  new_member = "  " $1 " " full ";"
-  print new_member
-  if (past_members) {
-    past_members = past_members "\n" new_member
-  } else {
-    past_members = new_member
-  }
-  print "};"
   print ""
 
   if (!offset_struct_name)
@@ -412,16 +327,6 @@ interesting && /^[ \t]*[_0-9a-zA-Z][_0-9a-zA-Z]*[ \t][ \t]*[_0-9a-zA-Z][_0-9a-zA
   sub(/;$/, "", mname)
 
   new_offset_struct_name = struct_name mname
-  print "struct " new_offset_struct_name " {"
-  if (past_members) print past_members
-  new_member = $0
-  print new_member
-  if (past_members) {
-    past_members = past_members "\n" new_member
-  } else {
-    past_members = new_member
-  }
-  print "};"
   print ""
 
   if (!offset_struct_name)
