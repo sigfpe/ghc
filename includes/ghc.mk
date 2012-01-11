@@ -146,7 +146,7 @@ includes/dist-derivedconstants/build/Rts.cross.h: includes/Rts.h | $$(dir $$@)/.
 	$(CC_STAGE1) -E -DPROFILING -DTHREADED_RTS $(CONF_CPP_OPTS_STAGE1) $(includes_CC_OPTS) $< > $@
 includes/dist-derivedconstants/build/mkDerivedConstants.cross.c: includes/mkDerivedConstants.cross.awk
 includes/dist-derivedconstants/build/mkDerivedConstants.cross.c: includes/dist-derivedconstants/build/Rts.cross.h includes/dist-derivedconstants/build/Capability.cross.h
-	awk -f includes/mkDerivedConstants.cross.awk $^ > $@
+	awk -f includes/mkDerivedConstants.cross.awk $(filter-out %.awk, $^) > $@
 includes/dist-derivedconstants/build/mkDerivedConstants.cross.o: includes/dist-derivedconstants/build/mkDerivedConstants.cross.c
 	$(CC_STAGE1) -c -DPROFILING -DTHREADED_RTS $(CONF_CPP_OPTS_STAGE1) $(rts_CC_OPTS) $(includes_CC_OPTS) -fcommon $< -o $@
 includes/dist-derivedconstants/build/SizeMacros.h: includes/mkSizeMacros.cross.awk
