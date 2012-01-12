@@ -440,7 +440,6 @@ compiler_stage1_NOT_NEEDED = YES
 endif
 
 ifneq "$(TARGETPLATFORM)" "$(HOSTPLATFORM)"
-compiler_stage2_NOT_NEEDED = YES
 compiler_stage3_NOT_NEEDED = YES
 else
 # if stage is set to something other than "2" or "", disable stage 2
