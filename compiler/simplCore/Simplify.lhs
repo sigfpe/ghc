@@ -976,11 +976,6 @@ simplType env ty
 ---------------------------------
 simplCoercionF :: SimplEnv -> InCoercion -> SimplCont
                -> SimplM (SimplEnv, OutExpr)
--- We are simplifying a term of form (Coercion co)
--- Simplify the InCoercion, and then try to combine with the 
--- context, to implememt the rule
---     (Coercion co) |> g
---  =  Coercion (syn (nth 0 g) ; co ; nth 1 g) 
 simplCoercionF env co cont 
   = do { co' <- simplCoercion env co
        ; rebuild env (Coercion co') cont }
@@ -1164,7 +1159,7 @@ rebuild env expr cont
   = case cont of
       Stop {}                      -> return (env, expr)
       CoerceIt co cont             -> rebuild env (mkCast expr co) cont 
-                                         -- NB: mkCast implements the (Coercion co |> g) optimisation
+                                   -- NB: mkCast implements the (Coercion co |> g) optimisation
       Select _ bndr alts se cont   -> rebuildCase (se `setFloats` env) expr bndr alts cont
       StrictArg info _ cont        -> rebuildCall env (info `addArgTo` expr) cont
       StrictBind b bs body se cont -> do { env' <- simplNonRecX (se `setFloats` env) b expr
@@ -1766,7 +1761,7 @@ rebuildCase env scrut case_bndr [(_, bndrs, rhs)] cont
  | all isDeadBinder bndrs       -- bndrs are [InId]
 
  , if isUnLiftedType (idType case_bndr)
-   then ok_for_spec         -- Satisfy the let-binding invariant
+   then elim_unlifted        -- Satisfy the let-binding invariant
    else elim_lifted
   = do  { -- pprTrace "case elim" (vcat [ppr case_bndr, ppr (exprIsHNF scrut),
           --                            ppr strict_case_bndr, ppr (scrut_is_var scrut),
@@ -1785,6 +1780,14 @@ rebuildCase env scrut case_bndr [(_, bndrs, rhs)] cont
 
      || (is_plain_seq && ok_for_spec)
               -- Note: not the same as exprIsHNF
+
+    elim_unlifted 
+      | is_plain_seq = exprOkForSideEffects scrut
+            -- The entire case is dead, so we can drop it,
+            -- _unless_ the scrutinee has side effects
+      | otherwise    = exprOkForSpeculation scrut
+            -- The case-binder is alive, but we may be able
+            -- turn the case into a let, if the expression is ok-for-spec
 
     ok_for_spec      = exprOkForSpeculation scrut
     is_plain_seq     = isDeadBinder case_bndr	-- Evaluation *only* for effect
