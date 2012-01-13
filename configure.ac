@@ -337,6 +337,17 @@ dnl ** Which gcc to use?
 dnl --------------------------------------------------------------
 FIND_GCC()
 
+if test x"$TargetPlatform" = x"$HostPlatform"; then
+  BOOTSTRAPPING_GHC_INFO_FIELD([CC_STAGE1],[C compiler command],['$(CC)'])
+else
+  if test x"$TargetCC" != x; then
+    BOOTSTRAPPING_GHC_INFO_FIELD([CC_STAGE1],[target C compiler command],[$TargetCC])
+  else
+    BOOTSTRAPPING_GHC_INFO_FIELD([CC_STAGE1],[target C compiler command],['$(CC)'])
+    TargetCC="$WhatGccIsCalled"
+  fi
+fi
+
 dnl ** Which ld to use?
 dnl --------------------------------------------------------------
 FP_ARG_WITH_PATH_GNU_PROG([LD], [ld])
@@ -592,6 +603,27 @@ AC_CHECK_SIZEOF(void *,             4)
 
 dnl for use in settings.in
 WordSize=$ac_cv_sizeof_void_p
+
+dnl check whether word sizes are commensurable
+case $HaskellTargetArch in
+ArchX86|ArchPPC|ArchSPARC|ArchARM)
+    ArchWordSize=4
+    ;;
+ArchX86_64|ArchPPC_64)
+    ArchWordSize=8
+    ;;
+*)
+    ArchWordSize=$WordSize
+    ;;
+esac
+if test "$ArchWordSize" != "$WordSize"; then
+echo "Target arch word size ($ArchWordSize) and"
+echo "target C compiler ($CC) word size ($WordSize) differ."
+echo " You can either specify a different target arch ('--target=<arch>')"
+echo " or another target C compiler ('--with-target-gcc=<compiler>')."
+exit 1
+fi
+
 AC_SUBST(WordSize)
 
 dnl ** what are alignment constraints on various types
@@ -845,7 +877,17 @@ Configure completed successfully.
    Target platform       : $TargetPlatform
 "]
 
-if test "$BootingFromHc" = "YES"; then
+echo ["\
+   Building a cross-compiler.
+
+   Bootstrapping using   : $WithGhc
+      which is version   : $GhcVersion
+   Target C compiler     : $TargetCC
+          'nm' command   : $TargetNM
+"]
+if test x"$TargetPlatform" != x"$HostPlatform"; then
+
+elif test "$BootingFromHc" = "YES"; then
 echo ["\
    Bootstrapping from HC files.
 "]

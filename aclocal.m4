@@ -2002,6 +2002,12 @@ AC_DEFUN([FIND_GCC],[
     export CC
     WhatGccIsCalled="$CC"
     AC_SUBST(WhatGccIsCalled)
+    if test x"$TargetPlatform" != x"$HostPlatform"; then
+        FP_ARG_WITH_PATH_GNU_PROG_OPTIONAL([TargetCC], [target-gcc])
+        export TargetCC
+        FP_ARG_WITH_PATH_GNU_PROG_OPTIONAL([TargetNM], [target-nm])
+        export TargetNM
+    fi
 ])
 
 # LocalWords:  fi
