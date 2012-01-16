@@ -173,23 +173,8 @@ AC_DEFUN([FPTOOLS_SET_HASKELL_PLATFORM_VARS],
             GET_ARM_ISA()
             test -z "[$]2" || eval "[$]2=\"ArchARM {armISA = \$ARM_ISA, armISAExt = \$ARM_ISA_EXT}\""
             ;;
-        alpha|mips|mipseb|mipsel|hppa|hppa1_1|ia64|m68k|rs6000|s390|s390x|sparc64|vax)
+        *)
             test -z "[$]2" || eval "[$]2=ArchUnknown"
-            ;;
-        *)
-            echo "Unknown arch [$]1"
-            exit 1
-            ;;
-        esac
-    }
-
-    checkVendor() {
-        case [$]1 in
-        dec|unknown|hp|apple|next|sun|sgi|ibm)
-            ;;
-        *)
-            echo "Unknown vendor [$]1"
-            exit 1
             ;;
         esac
     }
@@ -220,12 +205,8 @@ AC_DEFUN([FPTOOLS_SET_HASKELL_PLATFORM_VARS],
         netbsd)
             test -z "[$]2" || eval "[$]2=OSNetBSD"
             ;;
-        dragonfly|osf1|osf3|hpux|linuxaout|freebsd2|cygwin32|gnu|nextstep2|nextstep3|sunos4|ultrix|irix|aix|haiku)
-            test -z "[$]2" || eval "[$]2=OSUnknown"
-            ;;
         *)
-            echo "Unknown OS '[$]1'"
-            exit 1
+            test -z "[$]2" || eval "[$]2=OSUnknown"
             ;;
         esac
     }
@@ -272,15 +253,12 @@ AC_DEFUN([FPTOOLS_SET_HASKELL_PLATFORM_VARS],
     CFLAGS="$CFLAGS2"
 
     checkArch "$BuildArch" ""
-    checkVendor "$BuildVendor"
     checkOS "$BuildOS" ""
 
     checkArch "$HostArch" ""
-    checkVendor "$HostVendor"
     checkOS "$HostOS" ""
 
     checkArch "$TargetArch" "HaskellTargetArch"
-    checkVendor "$TargetVendor"
     checkOS "$TargetOS" "HaskellTargetOs"
 
     AC_SUBST(HaskellTargetArch)
@@ -1864,9 +1842,6 @@ case "$1" in
   powerpc*)
     $2="powerpc"
     ;;
-  rs6000)
-    $2="rs6000"
-    ;;
   s390x*)
     $2="s390x"
     ;;
@@ -1879,15 +1854,8 @@ case "$1" in
   sparc*)
     $2="sparc"
     ;;
-  vax)
-    $2="vax"
-    ;;
-  x86_64)
-    $2="x86_64"
-    ;;
   *)
-    echo "Unknown CPU $1"
-    exit 1
+    $2="$1"
     ;;
   esac
 ])
@@ -1918,16 +1886,11 @@ case "$1" in
   linux-*|linux)
     $2="linux"
     ;;
-  # As far as I'm aware, none of these have relevant variants
-  freebsd|netbsd|openbsd|dragonfly|osf1|osf3|hpux|linuxaout|kfreebsdgnu|freebsd2|solaris2|cygwin32|mingw32|darwin|gnu|nextstep2|nextstep3|sunos4|ultrix|irix|aix|haiku)
-    $2="$1"
-    ;;
   freebsd8) # like i686-gentoo-freebsd8
     $2="freebsd"
     ;;
   *)
-    echo "Unknown OS $1"
-    exit 1
+    $2="$1"
     ;;
   esac
 ])
